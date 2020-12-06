@@ -4,7 +4,7 @@ Export [A-Frame](https://aframe.io/) From Unity Scene.
 
 Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introduction/)+.
 
-![Screenshot after converting a scene from Unity 3D to A-Frame in the web browser on Chrome.](aframe-screenshot.png)
+![Screenshot after converting a scene from Unity 3D to A-Frame in the web browser on Chrome.](screenshot.png)
 
 ## Import to your Unity3D Project.
 1. Clone This Repository in your PC.<br><br>
