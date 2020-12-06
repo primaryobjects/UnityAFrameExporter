@@ -7,7 +7,7 @@ public class AFrameExporter : ScriptableObject {
 
     [HeaderAttribute("General")]
     public string title = "Hello world!";
-    public string libraryAddress = "https://aframe.io/releases/latest/aframe.min.js";
+    public string libraryAddress = "https://aframe.io/releases/1.1.0/aframe.min.js";
     public bool enable_performance_statistics = false;
     [HeaderAttribute("Sky")]
     public bool enable_sky = false;
@@ -108,7 +108,7 @@ public class AFrameExporter : ScriptableObject {
                     AssetDatabase.CopyAsset(texture_path, new_path);
                 }
 
-                add_str += "src=\"images/" + Path.GetFileName(texture_path) + "\" ";
+                add_str += "src=\"images/" + Path.GetFileName(texture_path.Replace(".tga", ".png")) + "\" ";
             }
 
             add_str += "></a-sky>\n";
@@ -146,15 +146,25 @@ public class AFrameExporter : ScriptableObject {
                 Light light = obj.GetComponent<Light>();
                 SpriteRenderer spriteRenderer = obj.GetComponent<SpriteRenderer>();
                 SkinnedMeshRenderer skinnedMeshRenderer = obj.GetComponent<SkinnedMeshRenderer>();
+
                 //メッシュフィルターコンポーネントを持ってるなら
                 if (meshFilter && meshFilter.sharedMesh)
                 {
+                    // Get the image src url string to reference in the HTML tag.
+                    Material mat = obj.GetComponent<Renderer>().sharedMaterial;
+                    string imageSrcUrl = "";
+                    if (mat)
+                    {
+                        imageSrcUrl = "src=\"" + outputTexture(mat).Replace("src: ", "") + "\" ";
+                    }
+
                     //Cubeの場合
                     if (meshFilter.sharedMesh.name == "Cube")
                     {
                         Vector3 scale = obj.transform.lossyScale;
 
-                        string append_str = indent + "<a-entity geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        //string append_str = indent + "<a-entity geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        string append_str = indent + "<a-box " + imageSrcUrl + "geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-box>\n";
                         ret_str += append_str;
                     }
                     //Sphereの場合
@@ -167,7 +177,8 @@ public class AFrameExporter : ScriptableObject {
                         {
                             radius = (scale.x + scale.y + scale.z) * 0.333333333f * 0.5f;
                         }
-                        string append_str = indent + "<a-entity geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        //string append_str = indent + "<a-entity geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        string append_str = indent + "<a-sphere " + imageSrcUrl + "geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-sphere>\n";
                         ret_str += append_str;
                     }
                     //Cylinderの場合(Unityのスケール1,1,1のシリンダーは半径0.5で高さ２)  TODO:パックマンみたいに欠けたシリンダー対応 独自コンポーネントくっつけて対応予定
@@ -178,7 +189,8 @@ public class AFrameExporter : ScriptableObject {
                         float radius = 0.5f;
                         radius = (scale.x + scale.z) * 0.5f * 0.5f;
                         float height = scale.y * 2f;
-                        string append_str = indent + "<a-entity geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        //string append_str = indent + "<a-entity geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        string append_str = indent + "<a-cylinder " + imageSrcUrl + "geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-cylinder>\n";
                         ret_str += append_str;
                     }
                     //Planeの場合(Unityのスケール1,1,1のプレーンは幅10高さ10）x90回転でa-frameと揃う
@@ -188,7 +200,9 @@ public class AFrameExporter : ScriptableObject {
                         eulerAngles.x -= 90f;
                         float width = obj.transform.lossyScale.x * 10f;
                         float height = obj.transform.lossyScale.z * 10f;
-                        string append_str = indent + "<a-entity geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+
+                        //string append_str = indent + "<a-entity geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        string append_str = indent + "<a-plane " + imageSrcUrl + "geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-plane>\n";
                         ret_str += append_str;
                     }
                     //TODO:videoの場合
@@ -201,9 +215,10 @@ public class AFrameExporter : ScriptableObject {
                     //Modelの場合
                     else
                     {
-                        string new_path = export_path + "/models/" + meshFilter.sharedMesh.name + ".obj";
+                        string objFileName = meshFilter.sharedMesh.name.Replace(":", "_");
+                        string new_path = export_path + "/models/" + objFileName + ".obj";
                         //obj無ければ作成
-                        if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + meshFilter.sharedMesh.name + ".obj"))
+                        if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
                         {
                             ObjExporter.MeshToFile(meshFilter, new_path, true);
                             AssetDatabase.ImportAsset(new_path);
@@ -213,16 +228,18 @@ public class AFrameExporter : ScriptableObject {
                         }
 
                         //マテリアルからテクスチャを取り出す
-                        string append_str = indent + "<a-entity loader=\"src: url(models/" + meshFilter.sharedMesh.name + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                        string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-obj-model>\n";
                         ret_str += append_str;
                     }
                 }
                 //skinnedMeshModelの場合
                 else if (skinnedMeshRenderer && skinnedMeshRenderer.sharedMesh)
                 {
-                    string new_path = export_path + "/models/" + skinnedMeshRenderer.sharedMesh.name + ".obj";
+                    string objFileName = skinnedMeshRenderer.sharedMesh.name.Replace(":", "_");
+                    string new_path = export_path + "/models/" + objFileName + ".obj";
                     //obj無ければ作成
-                    if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + skinnedMeshRenderer.sharedMesh.name + ".obj"))
+                    if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
                     {
                         ObjExporter.SkinnedMeshToFile(skinnedMeshRenderer, new_path, true);
                         AssetDatabase.ImportAsset(new_path);
@@ -232,7 +249,8 @@ public class AFrameExporter : ScriptableObject {
                     }
 
                     //マテリアルからテクスチャを取り出す
-                    string append_str = indent + "<a-entity loader=\"src: url(models/" + skinnedMeshRenderer.sharedMesh.name + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                    //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
+                    string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-obj-model>\n";
                     ret_str += append_str;
                 }
                 //imageの場合 UnityはQuad シングルスプライトのみ対応
@@ -279,12 +297,37 @@ public class AFrameExporter : ScriptableObject {
                 //Lightの場合
                 else if (light)
                 {
+                    Vector3 forward = -obj.transform.forward;
+
+                    //Vector3 rotation = obj.transform.eulerAngles;
+                    //rotation.x -= 90f;
+
+                    SerializedObject serializedObject = new UnityEditor.SerializedObject(obj.transform);
+                    SerializedProperty serializedEulerHint = serializedObject.FindProperty("m_LocalEulerAnglesHint");
+                    Vector3 rotation = serializedEulerHint.vector3Value;
+
+                    string lightPosition_str = "position=\"" + -forward.x + " " + forward.y + " " + forward.z + "\" ";
+                    string lightRotation_str = "rotation=\"" + -rotation.x + " " + rotation.y + " " + rotation.z + "\" ";
+
                     //DirectionalLightの場合
                     if (light.type == LightType.Directional)
                     {
-                        Vector3 forward = -obj.transform.forward;
-                        string lightPosition_str = "position=\"" + -forward.x + " " + forward.y + " " + forward.z + "\" ";
-                        string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
+                        //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=directional intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
+                        ret_str += append_str;
+                        isThereLight = true;
+                    }
+                    else if (light.type == LightType.Point)
+                    {
+                        //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=point distance=" + light.range + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
+                        ret_str += append_str;
+                        isThereLight = true;
+                    }
+                    else if (light.type == LightType.Spot)
+                    {
+                        //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=spot distance=" + light.range + " angle=" + light.spotAngle + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
                         ret_str += append_str;
                         isThereLight = true;
                     }
@@ -552,7 +595,7 @@ public class AFrameExporter : ScriptableObject {
                 AssetDatabase.CopyAsset(texture_path, new_path);
             }
 
-            return "src: url(images/" + Path.GetFileName(texture_path) + "); ";
+            return "src: url(images/" + Path.GetFileName(texture_path).Replace(".tga", ".png").Replace(".tif", ".png") + "); ";
         }
         return "";
     }
