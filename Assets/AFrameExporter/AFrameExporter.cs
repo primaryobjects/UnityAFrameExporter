@@ -118,6 +118,8 @@ public class AFrameExporter : ScriptableObject {
         GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
         int objects_num = allObjects.Length;
         int process_num = 0;
+        int meshIndex = 0;
+
         //オブジェクト全検索
         foreach (GameObject obj in allObjects)
         {
@@ -215,7 +217,7 @@ public class AFrameExporter : ScriptableObject {
                     //Modelの場合
                     else
                     {
-                        string objFileName = meshFilter.sharedMesh.name.Replace(":", "_");
+                        string objFileName = meshFilter.sharedMesh.name.Replace(":", "_") + meshIndex++;
                         string new_path = export_path + "/models/" + objFileName + ".obj";
                         //obj無ければ作成
                         if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
@@ -236,7 +238,7 @@ public class AFrameExporter : ScriptableObject {
                 //skinnedMeshModelの場合
                 else if (skinnedMeshRenderer && skinnedMeshRenderer.sharedMesh)
                 {
-                    string objFileName = skinnedMeshRenderer.sharedMesh.name.Replace(":", "_");
+                    string objFileName = skinnedMeshRenderer.sharedMesh.name.Replace(":", "_") + meshIndex++;
                     string new_path = export_path + "/models/" + objFileName + ".obj";
                     //obj無ければ作成
                     if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
