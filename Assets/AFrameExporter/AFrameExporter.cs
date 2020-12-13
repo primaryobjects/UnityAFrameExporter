@@ -108,7 +108,7 @@ public class AFrameExporter : ScriptableObject {
                     AssetDatabase.CopyAsset(texture_path, new_path);
                 }
 
-                add_str += "src=\"images/" + Path.GetFileName(texture_path.Replace(".tga", ".png")) + "\" ";
+                add_str += "src=\"images/" + Path.ChangeExtension(Path.GetFileName(texture_path), ".png") + "\" ";
             }
 
             add_str += "></a-sky>\n";
@@ -286,10 +286,12 @@ public class AFrameExporter : ScriptableObject {
                     Camera camera = obj.GetComponent<Camera>();
                     if (camera)
                     {
-                        string append_str = indent + "<a-camera " + outputPosition(obj) + " cursor-color=#" + ColorToHex(cursor_color) +
-                            " wasd-controls-enabled=" + wasd_controls_enabled.ToString().ToLower() + " fov=" + camera.fieldOfView + " near=" + camera.nearClipPlane + " far=" + camera.farClipPlane +
-                            " cursor-maxdistance=" + cursor_maxdistance + " cursor-offset=" + cursor_offset + " cursor-opacity=" + cursor_opacity + " cursor-scale" + cursor_scale +
+                        string append_str = indent + "<a-entity id=\"rig\" " + outputPosition(obj) + " " + outputRotation(obj, false) + ">\n";
+                        append_str += indent + indent + "<a-camera cursor-color=#" + ColorToHex(cursor_color) +
+                            " wasd-controls-enabled=" + wasd_controls_enabled.ToString().ToLower() + /*" fov=" + camera.fieldOfView + " near=" + camera.nearClipPlane + " far=" + camera.farClipPlane +*/
+                            " cursor-maxdistance=" + cursor_maxdistance + " cursor-offset=" + cursor_offset + " cursor-opacity=" + cursor_opacity + " cursor-scale=" + cursor_scale +
                             " look-controls-enabled=" + look_controls_enabled.ToString().ToLower() + "></a-camera>\n";
+                        append_str += indent + "</a-entity>\n";
                         ret_str += append_str;
                         isThereCamera = true;
                     }
@@ -297,7 +299,7 @@ public class AFrameExporter : ScriptableObject {
                 //Lightの場合
                 else if (light)
                 {
-                    Vector3 forward = -obj.transform.forward;
+                    //Vector3 forward = -obj.transform.forward;
 
                     //Vector3 rotation = obj.transform.eulerAngles;
                     //rotation.x -= 90f;
@@ -306,28 +308,28 @@ public class AFrameExporter : ScriptableObject {
                     SerializedProperty serializedEulerHint = serializedObject.FindProperty("m_LocalEulerAnglesHint");
                     Vector3 rotation = serializedEulerHint.vector3Value;
 
-                    string lightPosition_str = "position=\"" + -forward.x + " " + forward.y + " " + forward.z + "\" ";
+                    //string lightPosition_str = "position=\"" + -forward.x + " " + forward.y + " " + forward.z + "\" ";
                     string lightRotation_str = "rotation=\"" + -rotation.x + " " + rotation.y + " " + rotation.z + "\" ";
 
                     //DirectionalLightの場合
                     if (light.type == LightType.Directional)
                     {
                         //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
-                        string append_str = indent + "<a-light type=directional intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=directional intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + outputPosition(obj) + " " + lightRotation_str + "></a-light>\n";
                         ret_str += append_str;
                         isThereLight = true;
                     }
                     else if (light.type == LightType.Point)
                     {
                         //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
-                        string append_str = indent + "<a-light type=point distance=" + light.range + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=point distance=" + light.range + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + outputPosition(obj) + " " + lightRotation_str + "></a-light>\n";
                         ret_str += append_str;
                         isThereLight = true;
                     }
                     else if (light.type == LightType.Spot)
                     {
                         //string append_str = indent + "<a-light type=directional; intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + "></a-light>\n";
-                        string append_str = indent + "<a-light type=spot distance=" + light.range + " angle=" + light.spotAngle + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + lightPosition_str + " " + lightRotation_str + "></a-light>\n";
+                        string append_str = indent + "<a-light type=spot distance=" + light.range + " angle=" + light.spotAngle + " intensity=" + light.intensity + " color=#" + ColorToHex(light.color) + " " + outputPosition(obj) + " " + lightRotation_str + "></a-light>\n";
                         ret_str += append_str;
                         isThereLight = true;
                     }
@@ -373,19 +375,26 @@ public class AFrameExporter : ScriptableObject {
         return new Color32(r, g, b, 255);
     }
 
-    private string outputRotation(GameObject obj)
+    private string outputRotation(GameObject obj, bool invertY = true)
     {
         Vector3 rotation = obj.transform.rotation.eulerAngles;
-        return outputRotation(rotation);
+        return outputRotation(rotation, invertY);
     }
 
-    private string outputRotation(Vector3 eulerAngles)
+    private string outputRotation(Vector3 eulerAngles, bool invertY = true)
     {
         if (eulerAngles == Vector3.zero)
         {
             return "";
         }
-        return "rotation=\"" + eulerAngles.x + " " + -eulerAngles.y + " " + -eulerAngles.z + "\" ";
+
+        double factor = 1;
+        if (invertY)
+        {
+            factor = -1;
+        }
+
+        return "rotation=\"" + eulerAngles.x + " " + (eulerAngles.y * factor) + " " + -eulerAngles.z + "\" ";
     }
 
     private string outputScale(GameObject obj)
@@ -595,7 +604,7 @@ public class AFrameExporter : ScriptableObject {
                 AssetDatabase.CopyAsset(texture_path, new_path);
             }
 
-            return "src: url(images/" + Path.GetFileName(texture_path).Replace(".tga", ".png").Replace(".tif", ".png") + "); ";
+            return "src: url(images/" + Path.ChangeExtension(Path.GetFileName(texture_path), ".png") + "); ";
         }
         return "";
     }
