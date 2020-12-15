@@ -9,6 +9,7 @@ public class AFrameExporter : ScriptableObject {
     public string title = "Hello world!";
     public string libraryAddress = "https://aframe.io/releases/1.1.0/aframe.min.js";
     public bool enable_performance_statistics = false;
+    public bool unique_assets = false;
     [HeaderAttribute("Sky")]
     public bool enable_sky = false;
     public bool sky_color_from_MainCamera_Background = true;
@@ -157,7 +158,7 @@ public class AFrameExporter : ScriptableObject {
                     string imageSrcUrl = "";
                     if (mat)
                     {
-                        imageSrcUrl = "src=\"" + outputTexture(mat).Replace("src: ", "") + "\" ";
+                        imageSrcUrl = "src=\"" + outputTexture(mat, meshIndex).Replace("src: ", "") + "\" ";
                     }
 
                     //Cubeの場合
@@ -166,7 +167,7 @@ public class AFrameExporter : ScriptableObject {
                         Vector3 scale = obj.transform.lossyScale;
 
                         //string append_str = indent + "<a-entity geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-box " + imageSrcUrl + "geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-box>\n";
+                        string append_str = indent + "<a-box " + imageSrcUrl + "geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-box>\n";
                         ret_str += append_str;
                     }
                     //Sphereの場合
@@ -180,7 +181,7 @@ public class AFrameExporter : ScriptableObject {
                             radius = (scale.x + scale.y + scale.z) * 0.333333333f * 0.5f;
                         }
                         //string append_str = indent + "<a-entity geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-sphere " + imageSrcUrl + "geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-sphere>\n";
+                        string append_str = indent + "<a-sphere " + imageSrcUrl + "geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-sphere>\n";
                         ret_str += append_str;
                     }
                     //Cylinderの場合(Unityのスケール1,1,1のシリンダーは半径0.5で高さ２)  TODO:パックマンみたいに欠けたシリンダー対応 独自コンポーネントくっつけて対応予定
@@ -192,7 +193,7 @@ public class AFrameExporter : ScriptableObject {
                         radius = (scale.x + scale.z) * 0.5f * 0.5f;
                         float height = scale.y * 2f;
                         //string append_str = indent + "<a-entity geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-cylinder " + imageSrcUrl + "geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-cylinder>\n";
+                        string append_str = indent + "<a-cylinder " + imageSrcUrl + "geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-cylinder>\n";
                         ret_str += append_str;
                     }
                     //Planeの場合(Unityのスケール1,1,1のプレーンは幅10高さ10）x90回転でa-frameと揃う
@@ -204,7 +205,7 @@ public class AFrameExporter : ScriptableObject {
                         float height = obj.transform.lossyScale.z * 10f;
 
                         //string append_str = indent + "<a-entity geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-plane " + imageSrcUrl + "geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-plane>\n";
+                        string append_str = indent + "<a-plane " + imageSrcUrl + "geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj, meshIndex, false) + "></a-plane>\n";
                         ret_str += append_str;
                     }
                     //TODO:videoの場合
@@ -217,7 +218,7 @@ public class AFrameExporter : ScriptableObject {
                     //Modelの場合
                     else
                     {
-                        string objFileName = meshFilter.sharedMesh.name.Replace(":", "_") + meshIndex++;
+                        string objFileName = meshFilter.sharedMesh.name.Replace(":", "_") + (unique_assets ? meshIndex.ToString() : "");
                         string new_path = export_path + "/models/" + objFileName + ".obj";
                         //obj無ければ作成
                         if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
@@ -231,14 +232,14 @@ public class AFrameExporter : ScriptableObject {
 
                         //マテリアルからテクスチャを取り出す
                         //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-obj-model>\n";
+                        string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
                         ret_str += append_str;
                     }
                 }
                 //skinnedMeshModelの場合
                 else if (skinnedMeshRenderer && skinnedMeshRenderer.sharedMesh)
                 {
-                    string objFileName = skinnedMeshRenderer.sharedMesh.name.Replace(":", "_") + meshIndex++;
+                    string objFileName = skinnedMeshRenderer.sharedMesh.name.Replace(":", "_") + (unique_assets ? meshIndex.ToString() : "");
                     string new_path = export_path + "/models/" + objFileName + ".obj";
                     //obj無ければ作成
                     if (!File.Exists(Application.dataPath + "/AFrameExporter/export/models/" + objFileName + ".obj"))
@@ -252,7 +253,7 @@ public class AFrameExporter : ScriptableObject {
 
                     //マテリアルからテクスチャを取り出す
                     //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                    string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-obj-model>\n";
+                    string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
                     ret_str += append_str;
                 }
                 //imageの場合 UnityはQuad シングルスプライトのみ対応
@@ -341,6 +342,8 @@ public class AFrameExporter : ScriptableObject {
                     //TODO:Hemisphereの場合
                 }
             }
+
+            meshIndex++;
         }
 
         //Cameraが無い場合はデフォルト設定
@@ -414,7 +417,7 @@ public class AFrameExporter : ScriptableObject {
         return "scale=\"" + scale.x + " " + scale.y + " " + scale.z + "\" ";
     }
 
-    private string outputMaterial(GameObject obj)
+    private string outputMaterial(GameObject obj, int index, bool isTransparent = true)
     {
         string ret_str = "";
 
@@ -434,7 +437,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "shader: standard; ";
 
             //テクスチャ
-            ret_str += outputTexture(mat);
+            ret_str += outputTexture(mat, index);
 
             //リピート(xを使う)
             ret_str += "repeat: " + mat.mainTextureScale.x + "; ";
@@ -449,7 +452,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "roughness: " + (1f - mat.GetFloat("_Glossiness")) + "; ";
 
             //透過有効(_Modeが３ならRendering Modeはtransparent)
-            ret_str += "transparent: " + (mat.GetFloat("_Mode") == 3 ? "true" : "false") + "; ";
+            ret_str += "transparent: " + isTransparent.ToString().ToLower() + "; "; // (mat.GetFloat("_Mode") == 3 ? "true" : "false") + "; ";
 
             //透明度
             ret_str += "opacity: " + mat.color.a + "; ";
@@ -484,7 +487,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "shader: flat; ";
 
             //テクスチャ
-            ret_str += outputTexture(mat);
+            ret_str += outputTexture(mat, index);
 
             //リピート(xを使う)
             ret_str += "repeat: " + mat.mainTextureScale.x + "; ";
@@ -503,7 +506,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "shader: flat; ";
 
             //テクスチャ
-            ret_str += outputTexture(mat);
+            ret_str += outputTexture(mat, index);
 
             //リピート(xを使う)
             ret_str += "repeat: " + mat.mainTextureScale.x + "; ";
@@ -525,7 +528,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "shader: flat; ";
 
             //テクスチャ
-            ret_str += outputTexture(mat);
+            ret_str += outputTexture(mat, index);
 
             //リピート(xを使う)
             ret_str += "repeat: " + mat.mainTextureScale.x + "; ";
@@ -557,7 +560,7 @@ public class AFrameExporter : ScriptableObject {
             ret_str += "shader: standard; ";
 
             //テクスチャ
-            ret_str += outputTexture(mat);
+            ret_str += outputTexture(mat, index);
 
             //リピート(xを使う)
             ret_str += "repeat: " + mat.mainTextureScale.x + "; ";
@@ -567,6 +570,8 @@ public class AFrameExporter : ScriptableObject {
                 //カラー
                 ret_str += "color: #" + ColorToHex(mat.color) + "; ";
             }
+
+            ret_str += "transparent: " + isTransparent.ToString().ToLower() + "; ";
 
             //メタルネス
             //ret_str += "metalness: " + mat.GetFloat("_Metallic") + "; ";
@@ -590,24 +595,43 @@ public class AFrameExporter : ScriptableObject {
         return ret_str;
     }
 
-
-
-    private string outputTexture(Material mat)
+    private string outputTexture(Material mat, int index)
     {
         //テクスチャ
         Texture tex = mat.GetTexture("_MainTex");
         if (tex)
         {
-            string texture_path = AssetDatabase.GetAssetPath(tex);
-            string new_path = export_path + "/images/" + Path.GetFileName(texture_path);
+            string base_path = export_path + "/images/";
+
+            // Assets/Rocks/Textures/image.tif
+            string source_path = AssetDatabase.GetAssetPath(tex);
+            // Assets/AFrameExporter/export/images/image.tif
+            string destination_path = base_path + Path.GetFileName(source_path);
+            // Assets/AFrameExporter/export/images/image0.tif
+            string unique_destination_path = base_path + Path.GetFileNameWithoutExtension(source_path) + (unique_assets ? index.ToString() : "") + Path.GetExtension(source_path);
+            // Assets/AFrameExporter/export/images/image0.png
+            string png_destination_path = Path.ChangeExtension(Path.GetFileName(unique_destination_path), ".png");
+            string file_path = unique_destination_path;
+
             //テクスチャ無ければコピー
-            if (AssetDatabase.AssetPathToGUID(new_path) == "")
+            if (source_path.ToLower().EndsWith(".tif"))
             {
-                AssetDatabase.CopyAsset(texture_path, new_path);
+                file_path = png_destination_path;
+
+                if (!File.Exists(png_destination_path))
+                {
+                    EditorUtility.DisplayProgressBar("Converting TIF to PNG", source_path + " => " + Path.GetFileName(file_path), 0);
+                    System.Drawing.Bitmap.FromFile(source_path).Save(file_path, System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }
+            else if (!File.Exists(unique_destination_path))
+            {
+                AssetDatabase.CopyAsset(source_path, file_path);
             }
 
-            return "src: url(images/" + Path.ChangeExtension(Path.GetFileName(texture_path), ".png") + "); ";
+            return "src: url(images/" + Path.GetFileName(file_path) + "); ";
         }
+
         return "";
     }
 
@@ -625,7 +649,15 @@ public class AFrameExporter : ScriptableObject {
     //A-Frameを実行する
     public void RunAFrame()
     {
-        System.Diagnostics.Process.Start(Application.dataPath + "/AFrameExporter/export/" + export_filename);
+        //System.Diagnostics.Process.Start(Application.dataPath + "/AFrameExporter/export/" + export_filename);
+        var p = new System.Diagnostics.Process();
+        p.StartInfo.FileName = "python3";
+        p.StartInfo.Arguments = "-m http.server";
+        p.StartInfo.WorkingDirectory = Application.dataPath + "/" + export_path;
+        p.StartInfo.RedirectStandardOutput = true;
+        p.StartInfo.UseShellExecute = false;
+        p.StartInfo.CreateNoWindow = false;
+        p.Start();
     }
 
     //エクスポートしたA-Frameをクリア
