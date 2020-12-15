@@ -4,6 +4,8 @@ Export [A-Frame](https://aframe.io/) From Unity Scene.
 
 Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introduction/)+.
 
+![Export A-Frame scene from Unity 3D](screenshot.gif)
+
 ## Import to your Unity3D Project.
 1. Clone This Repository in your PC.<br><br>
 2. Copy "AFrameExporter" and "CombineMeshes" Folder to your project from repository<br><br>
