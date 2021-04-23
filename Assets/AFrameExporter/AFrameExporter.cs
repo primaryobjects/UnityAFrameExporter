@@ -4,10 +4,10 @@ using UnityEditor;
 using System.IO;
 
 public class AFrameExporter : ScriptableObject {
-
     [HeaderAttribute("General")]
     public string title = "Hello world!";
     public string libraryAddress = "https://aframe.io/releases/1.1.0/aframe.min.js";
+    public bool enable_web = true;
     public bool enable_performance_statistics = false;
     public bool unique_assets = false;
     [HeaderAttribute("Sky")]
@@ -72,6 +72,11 @@ public class AFrameExporter : ScriptableObject {
         if (enable_performance_statistics)
         {
             body_string = body_string.Replace("a-scene","a-scene stats=\"true\"");
+        }
+
+        if (enable_web)
+        {
+            File.Copy(exporter_path + "/script.js", Application.dataPath + "/AFrameExporter/export/script.js", true);
         }
 
         File.WriteAllText(Application.dataPath + "/AFrameExporter/export/" + export_filename, body_string);
@@ -286,18 +291,27 @@ public class AFrameExporter : ScriptableObject {
                 //MainCameraの場合
                 else if (!isThereCamera && obj.tag == "MainCamera")
                 {
+                    string append_str = "";
                     Camera camera = obj.GetComponent<Camera>();
-                    if (camera)
+
+                    if (camera && !enable_web)
                     {
-                        string append_str = indent + "<a-entity id=\"rig\" " + outputPosition(obj) + " " + outputRotation(obj, false) + ">\n";
+                        append_str = indent + "<a-entity id=\"rig\" " + outputPosition(obj) + " " + outputRotation(obj, false) + ">\n";
                         append_str += indent + indent + "<a-camera cursor-color=#" + ColorToHex(cursor_color) +
                             " wasd-controls-enabled=" + wasd_controls_enabled.ToString().ToLower() + /*" fov=" + camera.fieldOfView + " near=" + camera.nearClipPlane + " far=" + camera.farClipPlane +*/
                             " cursor-maxdistance=" + cursor_maxdistance + " cursor-offset=" + cursor_offset + " cursor-opacity=" + cursor_opacity + " cursor-scale=" + cursor_scale +
                             " look-controls-enabled=" + look_controls_enabled.ToString().ToLower() + "></a-camera>\n";
                         append_str += indent + "</a-entity>\n";
-                        ret_str += append_str;
-                        isThereCamera = true;
                     }
+                    else
+                    {
+                        append_str = indent + "<a-entity id=\"rig\" position=\"8.88 3.26 -16.53\" rotation=\"0 98.6636581420898 0\" movement-controls kinematic-body>\n";
+                        append_str = indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
+                        append_str = indent + "</a-entity>\n";
+                    }
+
+                    ret_str += append_str;
+                    isThereCamera = true;
                 }
                 //Lightの場合
                 else if (light)
@@ -349,10 +363,21 @@ public class AFrameExporter : ScriptableObject {
         //Cameraが無い場合はデフォルト設定
         if (!isThereCamera)
         {
-            string append_str = indent + "<a-camera cursor-color=#" + ColorToHex(cursor_color) +
-                            " wasd-controls-enabled=" + wasd_controls_enabled.ToString().ToLower() + "></a-camera>\n";
+            string append_str = "";
+            if (!enable_web)
+            {
+                append_str = indent + "<a-camera cursor-color=#" + ColorToHex(cursor_color) +
+                                " wasd-controls-enabled=" + wasd_controls_enabled.ToString().ToLower() + "></a-camera>\n";
+            }
+            else
+            {
+                append_str = indent + "<a-entity id=\"rig\" position=\"8.88 3.26 -16.53\" rotation=\"0 98.6636581420898 0\" movement-controls kinematic-body>\n";
+                append_str = indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
+                append_str = indent + "</a-entity>\n";
+            }
+
             ret_str += append_str;
-            ret_str += append_str;
+            isThereCamera = true;
         }
 
         //Lightが無い場合はデフォルトライト
