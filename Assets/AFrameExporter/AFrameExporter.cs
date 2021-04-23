@@ -8,6 +8,7 @@ public class AFrameExporter : ScriptableObject {
     public string title = "Hello world!";
     public string libraryAddress = "https://aframe.io/releases/1.1.0/aframe.min.js";
     public bool enable_web = true;
+    public bool enable_physics = true;
     public bool enable_performance_statistics = false;
     public bool unique_assets = false;
     [HeaderAttribute("Sky")]
@@ -77,6 +78,11 @@ public class AFrameExporter : ScriptableObject {
         if (enable_web)
         {
             File.Copy(exporter_path + "/script.js", Application.dataPath + "/AFrameExporter/export/script.js", true);
+        }
+
+        if (enable_physics)
+        {
+            body_string = body_string.Replace("&PHYSICS&", "<script src=\"//cdn.jsdelivr.net/gh/donmccurdy/aframe-physics-system@v3.2.0/dist/aframe-physics-system.min.js\"></script>");
         }
 
         File.WriteAllText(Application.dataPath + "/AFrameExporter/export/" + export_filename, body_string);
@@ -172,7 +178,7 @@ public class AFrameExporter : ScriptableObject {
                         Vector3 scale = obj.transform.lossyScale;
 
                         //string append_str = indent + "<a-entity geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-box " + imageSrcUrl + "geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-box>\n";
+                        string append_str = indent + "<a-box " + (enable_physics ? "static-body " : " ") + imageSrcUrl + "geometry=\"primitive: box; width: " + scale.x + "; height: " + scale.y + "; depth: " + scale.z + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-box>\n";
                         ret_str += append_str;
                     }
                     //Sphereの場合
@@ -186,7 +192,7 @@ public class AFrameExporter : ScriptableObject {
                             radius = (scale.x + scale.y + scale.z) * 0.333333333f * 0.5f;
                         }
                         //string append_str = indent + "<a-entity geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-sphere " + imageSrcUrl + "geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-sphere>\n";
+                        string append_str = indent + "<a-sphere " + (enable_physics ? "static-body " : " ") + imageSrcUrl + "geometry=\"primitive: sphere; radius: " + radius + "\" " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-sphere>\n";
                         ret_str += append_str;
                     }
                     //Cylinderの場合(Unityのスケール1,1,1のシリンダーは半径0.5で高さ２)  TODO:パックマンみたいに欠けたシリンダー対応 独自コンポーネントくっつけて対応予定
@@ -198,7 +204,7 @@ public class AFrameExporter : ScriptableObject {
                         radius = (scale.x + scale.z) * 0.5f * 0.5f;
                         float height = scale.y * 2f;
                         //string append_str = indent + "<a-entity geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-cylinder " + imageSrcUrl + "geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-cylinder>\n";
+                        string append_str = indent + "<a-cylinder " + (enable_physics ? "static-body " : " ") + imageSrcUrl + "geometry=\"primitive: cylinder; radius: " + radius + "\" height:" + height + "; " + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-cylinder>\n";
                         ret_str += append_str;
                     }
                     //Planeの場合(Unityのスケール1,1,1のプレーンは幅10高さ10）x90回転でa-frameと揃う
@@ -210,7 +216,7 @@ public class AFrameExporter : ScriptableObject {
                         float height = obj.transform.lossyScale.z * 10f;
 
                         //string append_str = indent + "<a-entity geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-plane " + imageSrcUrl + "geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj, meshIndex, false) + "></a-plane>\n";
+                        string append_str = indent + "<a-plane " + (enable_physics ? "static-body " : " ") + imageSrcUrl + "geometry=\"primitive: plane; width:" + width + "; height:" + height + "\" " + outputRotation(eulerAngles) + outputPosition(obj) + outputMaterial(obj, meshIndex, false) + "></a-plane>\n";
                         ret_str += append_str;
                     }
                     //TODO:videoの場合
@@ -237,7 +243,7 @@ public class AFrameExporter : ScriptableObject {
 
                         //マテリアルからテクスチャを取り出す
                         //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                        string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
+                        string append_str = indent + "<a-obj-model " + (enable_physics ? "static-body" : "") + " src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
                         ret_str += append_str;
                     }
                 }
@@ -258,7 +264,7 @@ public class AFrameExporter : ScriptableObject {
 
                     //マテリアルからテクスチャを取り出す
                     //string append_str = indent + "<a-entity loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj) + "></a-entity>\n";
-                    string append_str = indent + "<a-obj-model src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
+                    string append_str = indent + "<a-obj-model " + (enable_physics ? "static-body" : "") + " src=\"url(models/" + objFileName + ".obj)\" loader=\"src: url(models/" + objFileName + ".obj); format: obj\" " + outputScale(obj) + outputRotation(obj) + outputPosition(obj) + outputMaterial(obj, meshIndex) + "></a-obj-model>\n";
                     ret_str += append_str;
                 }
                 //imageの場合 UnityはQuad シングルスプライトのみ対応

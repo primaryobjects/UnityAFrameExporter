@@ -6,15 +6,16 @@ Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introductio
 
 ![Export A-Frame scene from Unity 3D](screenshot.gif)
 
-## Import to your Unity3D Project.
-1. Clone This Repository in your PC.<br><br>
-2. Copy "AFrameExporter" and "CombineMeshes" Folder to your project from repository<br><br>
-3. Open your project from Unity3D.<br><br>
-4. Open scene you want to export.<br><br>
-5. Click AFrameExporter prefab to show exporter inspector.<br><br>
-6. Click Export button on inspector.<br><br>
-7. Find the `index.html` file in your project Assets folder under `Assets/AFrameExporter/export/index.html`<br><br>
-8. Launch a local web server using `python3 -m http.server` to view the result at `http://localhost:8000`
+## Quick Start
+
+1. Clone this [repository](https://github.com/primaryobjects/UnityAFrameExporter.git)
+2. Copy "AFrameExporter" and "CombineMeshes" Folder to your project from repository
+3. Open your project from Unity3D.
+4. Open scene you want to export.
+5. Click AFrameExporter prefab to show exporter inspector.
+6. Click Export button on inspector.
+7. Find the `index.html` file in your project Assets folder under `Assets/AFrameExporter/export/index.html`
+8. Launch a local web server in the `/export` folder using `python3 -m http.server` to view the result at `http://localhost:8000`
 
 *Note 1, you may need to copy `.png` images into the folder `Assets/AFrameExporter/export/images` for textures used by your scene.*
 
@@ -22,20 +23,37 @@ Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introductio
 
 *Note 3, Linux users may need to install the following libraries: `sudo apt install libc6-dev` and `sudo apt install libgdiplus`.*
 
-## Using the Sample
-1. Clone This Repository in your PC.<br><br>
-2. Open this Repository as Project from Unity3D.<br><br>
-3. Double click sample to open sample Scene.<br><br>
-![image1](https://raw.github.com/wiki/umiyuki/UnityAFrameExporter/AFrame1.jpg)
-4. Click AFrameExporter prefab to show exporter inspector.<br><br>
-![image1](https://raw.github.com/wiki/umiyuki/UnityAFrameExporter/AFrame2.jpg)
-5. Click Export button on inspector.<br>
-  Export Scene as A-Frame in created export folder.<br><br>
-6. Click Run button to show created A-Frame on browser.<br><br>
-![image1](https://raw.github.com/wiki/umiyuki/UnityAFrameExporter/AFrame3.jpg)
+## Using Sound Effects
 
-## Export Option
+To add spatial sound effects to your VR scene, use the following [steps](https://gist.github.com/primaryobjects/66516de4423f302856ecb82f23edb07e#a-frame-audio-sound-in-ios) below.
+
+1. [Download](https://www.freesoundeffects.com/free-sounds/airplane-10004/) sound effects (mp3, wav) and copy to `Assets/AFrameExporter/export/sounds`.
+2. In your `index.html` file, add the following section:
+    ```html
+    <assets>
+        <audio id="mysound" src="mysound.mp3" preload="auto"></audio>
+    </assets>
+    ```
+3. To add sound to a specific object, use the following example:
+    ```html
+    <a-box src="url(images/box.png); audio="src: #mysound; loop: true; distance: 8;"></a-box>
+    ```
+
+Sound effects use [Howler.js](https://howlerjs.com/) and are compatible with Chrome, Safari, mobile devices, Android, and Apple iPhone iOS.
+
+### Audio Tag Options
+
+```
+loop: boolean, true to play sound effect continuously, default is false
+volume: integer, default is 1
+distance: integer, how close the camera must be to the object before playing audio, default is 8
+fade: integer, how quickly the sound fades when moving away from the object, default is 5000
+```
+
+## Export Options
+
 ![image1](https://raw.github.com/wiki/umiyuki/UnityAFrameExporter/AFrame4.jpg)
+
 <br>**◆General**<br>
 *・Title*<br>
   Title of A-Frame.<br>
@@ -75,21 +93,6 @@ Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introductio
   Clean exported files.
   If you editted export folder. These file will be deleted.<br>
 
-## Caution
-
-・You can't use Asset from Unity Asset Store limited of EULA.
-  But, you can ask asset developer about it.<br>
-・If you editted index.html in export folder, and re-export , It will be deleted.
-  Before edit A-Frame, please copy export folder to another directory.<br>
-・Export only main texture from object.
-
-## Supported Shader Type
-・Standard
-・Unlit/Color
-・Unlit/Texture
-・Unlit/Texture Colored
-・Legacy Shaders/Transparent/Diffuse
-
 ## Supported Unity3D Objects
 **・Main Camera**
 Supported parameters are Position, Rotation, Fov, NearClip, FarClip.<br>
@@ -112,3 +115,22 @@ Scale xz are exported average for A-Frame cylinder radius.<br>
 Export as plane.<br>
 **・Other Meshes**
 Export as Obj.
+**・Physics Engine**
+Using the [aframe-particle-system-component](https://github.com/IdeaSpaceVR/aframe-particle-system-component).
+**・Sound Engine**
+Using [Howler.js](https://howlerjs.com/) with spacial audio to play sound effects as you approach objects. See [example](https://gist.github.com/primaryobjects/66516de4423f302856ecb82f23edb07e#file-index-html) for how to add to your VR objects.
+
+## Caution
+
+・You can't use Asset from Unity Asset Store limited of EULA.
+  But, you can ask asset developer about it.<br>
+・If you editted index.html in export folder, and re-export , It will be deleted.
+  Before edit A-Frame, please copy export folder to another directory.<br>
+・Export only main texture from object.
+
+## Supported Shader Type
+・Standard
+・Unlit/Color
+・Unlit/Texture
+・Unlit/Texture Colored
+・Legacy Shaders/Transparent/Diffuse
