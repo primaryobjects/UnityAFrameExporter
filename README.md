@@ -13,7 +13,7 @@ Compatible with A-Frame version [1.1.0](https://aframe.io/docs/1.1.0/introductio
 4. Open scene you want to export.<br><br>
 5. Click AFrameExporter prefab to show exporter inspector.<br><br>
 6. Click Export button on inspector.<br><br>
-7. Find the `index.html` file in your project Assets folder under `Assets/AFrameExporter/export/index.html`
+7. Find the `index.html` file in your project Assets folder under `Assets/AFrameExporter/export/index.html`<br><br>
 8. Launch a local web server using `python3 -m http.server` to view the result at `http://localhost:8000`
 
 *Note 1, you may need to copy `.png` images into the folder `Assets/AFrameExporter/export/images` for textures used by your scene.*
