@@ -306,8 +306,8 @@ public class AFrameExporter : ScriptableObject {
                     else
                     {
                         append_str = indent + "<a-entity id=\"rig\" position=\"8.88 3.26 -16.53\" rotation=\"0 98.6636581420898 0\" movement-controls kinematic-body>\n";
-                        append_str = indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
-                        append_str = indent + "</a-entity>\n";
+                        append_str += indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
+                        append_str += indent + "</a-entity>\n";
                     }
 
                     ret_str += append_str;
@@ -372,8 +372,8 @@ public class AFrameExporter : ScriptableObject {
             else
             {
                 append_str = indent + "<a-entity id=\"rig\" position=\"8.88 3.26 -16.53\" rotation=\"0 98.6636581420898 0\" movement-controls kinematic-body>\n";
-                append_str = indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
-                append_str = indent + "</a-entity>\n";
+                append_str += indent + indent + "<a-entity camera look-controls tilt-controls></a-entity>\n";
+                append_str += indent + "</a-entity>\n";
             }
 
             ret_str += append_str;
