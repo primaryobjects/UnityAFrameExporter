@@ -677,22 +677,8 @@ public class AFrameExporter : ScriptableObject {
         return "position=\"" + -position.x + " " + position.y + " " + position.z + "\" ";
     }
 
-    //A-Frameを実行する
-    public void RunAFrame()
-    {
-        //System.Diagnostics.Process.Start(Application.dataPath + "/AFrameExporter/export/" + export_filename);
-        var p = new System.Diagnostics.Process();
-        p.StartInfo.FileName = "python3";
-        p.StartInfo.Arguments = "-m http.server";
-        p.StartInfo.WorkingDirectory = Application.dataPath + "/" + export_path;
-        p.StartInfo.RedirectStandardOutput = true;
-        p.StartInfo.UseShellExecute = false;
-        p.StartInfo.CreateNoWindow = false;
-        p.Start();
-    }
-
     //エクスポートしたA-Frameをクリア
-    public void CrearExport()
+    public void ClearExport()
     {
         string guid_exist = AssetDatabase.AssetPathToGUID(export_path);
         if (guid_exist != "")
